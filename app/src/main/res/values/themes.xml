@@ -1,0 +1,19 @@
+<resources>
+    <style name="Theme.WebTTS" parent="Theme.AppCompat.NoActionBar">
+        <item name="colorPrimary">#0066CC</item>
+        <item name="colorPrimaryDark">#004C99</item>
+        <item name="colorAccent">#0066CC</item>
+        <item name="android:windowBackground">#111111</item>
+        <item name="android:textColorPrimary">#FFFFFF</item>
+        <item name="android:textColorSecondary">#CCCCCC</item>
+        <item name="alertDialogTheme">@style/Theme.WebTTS.Dialog</item>
+    </style>
+
+    <style name="Theme.WebTTS.Dialog" parent="Theme.AppCompat.Dialog.Alert">
+        <item name="colorPrimary">#0066CC</item>
+        <item name="colorAccent">#0066CC</item>
+        <item name="android:windowBackground">#222222</item>
+        <item name="android:textColorPrimary">#FFFFFF</item>
+        <item name="android:textColorSecondary">#CCCCCC</item>
+    </style>
+</resources>

@@ -1,0 +1,43 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace "com.example.webtts"
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.example.netflixtts"
+        // Ban rieng Netflix: bo WebView + offset, UI hien dai.
+        // Cai song song duoc voi ban Web TTS (khac applicationId).
+        minSdk 29
+        targetSdk 34
+        versionCode 1
+        versionName "1.0"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            minifyEnabled false
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+    implementation "androidx.appcompat:appcompat:1.6.1"
+    implementation "com.google.android.material:material:1.11.0"
+    implementation "androidx.constraintlayout:constraintlayout:2.1.4"
+    // RecyclerView cho list phu de + list video.
+    implementation "androidx.recyclerview:recyclerview:1.3.2"
+    // V1.7: WebSocket cho Edge TTS HoaiMy (port tu edge-tts Python).
+    implementation "org.java-websocket:Java-WebSocket:1.5.6"
+}

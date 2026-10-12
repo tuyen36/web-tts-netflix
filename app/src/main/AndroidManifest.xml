@@ -27,10 +27,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <!-- V1.1: bo foregroundServiceType (API 29+) de chay Android 9 -->
         <service
             android:name=".TtsPlaybackService"
-            android:exported="false"
-            android:foregroundServiceType="mediaPlayback" />
+            android:exported="false" />
     </application>
 
 </manifest>

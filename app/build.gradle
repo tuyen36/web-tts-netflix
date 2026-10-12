@@ -10,10 +10,11 @@ android {
         applicationId "com.example.netflixtts"
         // Ban rieng Netflix: bo WebView + offset, UI hien dai.
         // Cai song song duoc voi ban Web TTS (khac applicationId).
-        minSdk 29
+        // V1.1: ha minSdk 28 (Android 9.0) — code da guard API 23/26.
+        minSdk 28
         targetSdk 34
-        versionCode 1
-        versionName "1.0"
+        versionCode 2
+        versionName "1.1"
     }
 
     buildTypes {

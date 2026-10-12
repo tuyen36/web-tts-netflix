@@ -58,8 +58,8 @@ public class TtsPlaybackService extends Service
     private static final String CH_ID = "webtts_playback";
     private static final int NOTIF_ID = 1001;
 
-    // Do mo nut noi theo yeu cau user: 30%.
-    private static final float FLOAT_ALPHA = 0.3f;
+    // Do mo nut noi: 50%, nen den, bo tron (ban Netflix).
+    private static final float FLOAT_ALPHA = 0.5f;
 
     // ----- state dung chung (static de Activity doc nhanh) -----
     private static List<SubtitleCue> sharedSubs =
@@ -639,7 +639,16 @@ public class TtsPlaybackService extends Service
         floatDot.setText("TTS");
         floatDot.setTextSize(13);
         floatDot.setAlpha(FLOAT_ALPHA);
-        floatDot.setBackgroundColor(0xFF0066CC);
+        // Ban Netflix: nen den + bo tron (thay mau xanh cu).
+        try {
+            android.graphics.drawable.GradientDrawable bg =
+                    new android.graphics.drawable.GradientDrawable();
+            bg.setColor(0xFF000000);
+            bg.setCornerRadius(200f);
+            floatDot.setBackground(bg);
+        } catch (Exception e) {
+            floatDot.setBackgroundColor(0xFF000000);
+        }
         floatDot.setTextColor(0xFFFFFFFF);
         floatDot.setPadding(24, 24, 24, 24);
         floatDot.setOnClickListener(v -> togglePanel());

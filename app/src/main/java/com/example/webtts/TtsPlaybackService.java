@@ -192,7 +192,9 @@ public class TtsPlaybackService extends Service
             @Override public void onReady(int index, int cached, int total) {
                 handler.post(() -> updateNotif());
             }
-            @Override public void onError(int index, String msg) {}
+            @Override public void onError(int index, String msg) {
+                handler.post(() -> updateNotif());
+            }
             @Override public void onSpeakStart(int index) {
                 handler.post(() -> {
                     if (index >= 0 && index < sharedSubs.size()) {
@@ -323,11 +325,25 @@ public class TtsPlaybackService extends Service
             String base = (playing ? "Dang doc" : "Tam dung") + " "
                     + sharedCount + " cau (" + v + ")";
             if (voice == VOICE_HOAIMY && edge != null) {
-                base += " - tai " + edge.readyCount() + " cau";
+                if (edge.readyCount() > 0) {
+                    base += " - tai " + edge.readyCount() + " cau";
+                } else if (edge.getLastError() != null) {
+                    String e = edge.getLastError();
+                    if (e.length() > 60) e = e.substring(0, 60);
+                    base += " - loi: " + e;
+                } else {
+                    base += " - dang tai...";
+                }
             }
             return base;
         }
         return "Cho nap phu de .srt (" + v + ")";
+    }
+
+    /** Loi HoaiMy gan nhat de MainActivity hien (null = khong loi). */
+    public static String edgeError() {
+        if (running == null || running.edge == null) return null;
+        return running.edge.getLastError();
     }
 
     private void updateNotif() {

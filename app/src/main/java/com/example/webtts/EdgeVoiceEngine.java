@@ -56,6 +56,9 @@ public class EdgeVoiceEngine {
     private volatile int ttsVol = 100;
     private volatile boolean playing = false;
     private volatile int currentIndex = -1;
+    /** Loi tai gan nhat de hien ra notification thay vi im lang. */
+    private volatile String lastError;
+    public String getLastError() { return lastError; }
     private MediaPlayer player;
     private final Object playerLock = new Object();
 
@@ -72,6 +75,7 @@ public class EdgeVoiceEngine {
         readyPath.clear();
         rawDur.clear();
         queued.clear();
+        lastError = null;
         stopPlayer();
         currentIndex = -1;
     }
@@ -123,6 +127,7 @@ public class EdgeVoiceEngine {
         readyPath.clear();
         rawDur.clear();
         queued.clear();
+        lastError = null;
         int removed = 0;
         try {
             File[] fs = cacheDir.listFiles();
@@ -170,10 +175,16 @@ public class EdgeVoiceEngine {
     }
 
     private void fetch(int index, int gen) {
+        List<SubtitleCue> s = subs;
+        if (index < 0 || index >= s.size()) {
+            queued.remove(gen + ":" + index);
+            return;
+        }
+        if (gen != generation.get()) {
+            queued.remove(gen + ":" + index);
+            return;
+        }
         try {
-            List<SubtitleCue> s = subs;
-            if (index < 0 || index >= s.size()) return;
-            if (gen != generation.get()) return;
             SubtitleCue cue = s.get(index);
             File f = pathFor(index, cue.text);
             if (f.exists() && f.length() > 0) {
@@ -181,45 +192,63 @@ public class EdgeVoiceEngine {
                 if (d > 0) {
                     rawDur.put(index, d);
                     readyPath.put(index, f.getAbsolutePath());
+                    lastError = null;
                     if (listener != null) {
                         listener.onReady(index, readyPath.size(),
                                 Math.min(s.size(), PRELOAD_COUNT + 1));
                     }
+                    queued.remove(gen + ":" + index);
                     return;
                 } else {
                     f.delete();
                 }
             }
+            // Async: KHONG remove queued o day (bug cu remove ngay nen
+            // preload goi lai gay tai trung). Chi remove trong callback.
             EdgeTtsClient.synthesize(cue.text, VOICE, "+0%", new EdgeTtsClient.Callback() {
                 @Override public void onAudio(byte[] mp3) {
-                    if (gen != generation.get()) return;
                     try {
-                        FileOutputStream out = new FileOutputStream(f);
-                        out.write(mp3);
-                        out.close();
-                    } catch (Exception e) {
-                        if (listener != null) listener.onError(index, e.getMessage());
-                        return;
-                    }
-                    float d = probeDuration(f.getAbsolutePath());
-                    if (d <= 0) {
-                        f.delete();
-                        if (listener != null) listener.onError(index, "mp3 loi");
-                        return;
-                    }
-                    rawDur.put(index, d);
-                    readyPath.put(index, f.getAbsolutePath());
-                    if (listener != null) {
-                        listener.onReady(index, readyPath.size(),
-                                Math.min(subs.size(), PRELOAD_COUNT + 1));
+                        if (gen != generation.get()) return;
+                        try {
+                            FileOutputStream out = new FileOutputStream(f);
+                            out.write(mp3);
+                            out.close();
+                        } catch (Exception e) {
+                            lastError = e.getMessage();
+                            if (listener != null) listener.onError(index, e.getMessage());
+                            return;
+                        }
+                        float d = probeDuration(f.getAbsolutePath());
+                        if (d <= 0) {
+                            f.delete();
+                            lastError = "mp3 loi";
+                            if (listener != null) listener.onError(index, "mp3 loi");
+                            return;
+                        }
+                        rawDur.put(index, d);
+                        readyPath.put(index, f.getAbsolutePath());
+                        lastError = null;
+                        if (listener != null) {
+                            listener.onReady(index, readyPath.size(),
+                                    Math.min(subs.size(), PRELOAD_COUNT + 1));
+                        }
+                    } finally {
+                        queued.remove(gen + ":" + index);
                     }
                 }
                 @Override public void onError(String msg) {
-                    if (listener != null) listener.onError(index, msg);
+                    try {
+                        lastError = msg;
+                        if (listener != null) listener.onError(index, msg);
+                    } finally {
+                        queued.remove(gen + ":" + index);
+                    }
                 }
             });
-        } finally {
+        } catch (Exception e) {
             queued.remove(gen + ":" + index);
+            lastError = e.getMessage();
+            if (listener != null) listener.onError(index, e.getMessage());
         }
     }
 

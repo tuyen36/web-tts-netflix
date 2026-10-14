@@ -157,6 +157,20 @@ public class MainActivity extends AppCompatActivity {
                         position = sp2;
                         syncUi();
                     }
+                    // Hien loi HoaiMy (neu co) de user biet tai sao im lang.
+                    if (!subs.isEmpty()
+                            && TtsPlaybackService.getVoice()
+                                    == TtsPlaybackService.VOICE_HOAIMY) {
+                        String err = TtsPlaybackService.edgeError();
+                        String prog = TtsPlaybackService.edgeProgress();
+                        if (err != null && "0 cau".equals(prog)) {
+                            String s = "HoaiMy loi: " + err;
+                            if (s.length() > 120) s = s.substring(0, 120);
+                            if (!s.equals(tvStatus.getText().toString())) {
+                                tvStatus.setText(s);
+                            }
+                        }
+                    }
                 });
             }
         }, 500, 500);

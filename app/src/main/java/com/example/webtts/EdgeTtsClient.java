@@ -59,6 +59,10 @@ public class EdgeTtsClient {
         headers.put("Accept-Encoding", "gzip, deflate, br, zstd");
         headers.put("Accept-Language", "en-US,en;q=0.9");
         headers.put("Sec-WebSocket-Version", "13");
+        // Giong edge-tts Python DRM.headers_with_muid().
+        try {
+            headers.put("Cookie", "muid=" + EdgeProtocol.generateMuid() + ";");
+        } catch (Exception ignored) {}
 
         WebSocketClient ws = new WebSocketClient(new URI(EdgeProtocol.wsUrl()), headers) {
             @Override public void onOpen(ServerHandshake h) {
@@ -79,8 +83,12 @@ public class EdgeTtsClient {
                     if (head.contains("Path:turn.end")) {
                         gotEnd.set(true);
                         done.countDown();
+                    } else if (head.contains("Path:response")) {
+                        // Giu lai de bao loi that (403 cu / het han) thay vi "no audio".
+                        String body = sep >= 0 ? message.substring(sep + 4) : "";
+                        if (err[0] == null) err[0] = "response: " + body.trim();
                     }
-                    // Path:audio.metadata / response / turn.start: bo qua.
+                    // Path:audio.metadata / turn.start: bo qua.
                 } catch (Exception ignored) {}
             }
 
